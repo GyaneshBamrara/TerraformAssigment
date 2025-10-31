@@ -2,6 +2,51 @@ provider "aws" {
   region = var.aws_region
 }
 
+variable "aws_region" {
+  description = "AWS region to deploy resources in"
+  default     = "ap-south-1"
+}
+
+variable "bucket_prefix" {
+  description = "Prefix for the S3 bucket name"
+  default     = "terraformgb-s3-bucket"
+}
+
+variable "environment" {
+  description = "Environment tag for resources"
+  default     = "Dev"
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC"
+  default     = "10.0.0.0/24"
+}
+
+variable "subnet_cidr" {
+  description = "CIDR block for the subnet"
+  default     = "10.0.0.0/28"
+}
+
+variable "availability_zone" {
+  description = "Availability zone for the subnet"
+  default     = "ap-south-1b"
+}
+
+variable "ami_id" {
+  description = "AMI ID for EC2 instance"
+  default     = "ami-02d26659fd82cf299"
+}
+
+variable "instance_type" {
+  description = "EC2 instance type"
+  default     = "t3.micro"
+}
+
+variable "key_name" {
+  description = "Key pair name for EC2 SSH access"
+  default     = "KeyTerra"
+}
+
 resource "random_id" "rand" {
   byte_length = 4
 }
@@ -17,7 +62,7 @@ resource "aws_s3_bucket" "terraformgb_bucket" {
 resource "aws_vpc" "terra_vpc" {
   cidr_block = var.vpc_cidr
   tags = {
-    Name = var.vpc_name
+    Name = "TerraF_vpc"
   }
 }
 
@@ -27,14 +72,14 @@ resource "aws_subnet" "terra_subnet" {
   availability_zone       = var.availability_zone
   map_public_ip_on_launch = true
   tags = {
-    Name = var.subnet_name
+    Name = "Terra_subnet"
   }
 }
 
 resource "aws_internet_gateway" "terra_igw" {
   vpc_id = aws_vpc.terra_vpc.id
   tags = {
-    Name = var.igw_name
+    Name = "Terra_IGW"
   }
 }
 
@@ -45,7 +90,7 @@ resource "aws_route_table" "terra_rt" {
     gateway_id = aws_internet_gateway.terra_igw.id
   }
   tags = {
-    Name = var.route_table_name
+    Name = "Terra_RouteTable"
   }
 }
 
@@ -55,7 +100,7 @@ resource "aws_route_table_association" "terra_rta" {
 }
 
 resource "aws_security_group" "terra_sg" {
-  name        = var.sg_name
+  name        = "terra-sg"
   description = "Allow SSH and HTTP"
   vpc_id      = aws_vpc.terra_vpc.id
 
@@ -81,56 +126,26 @@ resource "aws_security_group" "terra_sg" {
   }
 
   tags = {
-    Name = var.sg_name
+    Name = "Terra_SecurityGroup"
   }
 }
 
 resource "aws_instance" "terraform_ins" {
   ami                         = var.ami_id
-_group.terra_sg.id]
+  instance_type subnet_id                   = aws_subnet.terra_subnet.id
+  vpc_security_group_ids      = [aws_security_group.terra_sg.id]
   associate_public_ip_address = true
   key_name                    = var.key_name
 
   tags = {
-   TerraF_vpc"
+    Name = "Terraform_ins"
+  }
 }
 
-variable "subnet_cidr" {
-  default = "10.0.0.0/28"
+output "ec2_public_ip" {
+  value = aws_instance.terraform_ins.public_ip
 }
 
-variable "availability_zone" {
-  default = "ap-south-1b"
-}
-
-variable "subnet_name" {
-  default = "Terra_subnet"
-}
-
-variable "igw_name" {
-  default = "Terra_IGW"
-}
-
-variable "route_table_name" {
-  default = "Terra_RouteTable"
-}
-
-variable "sg_name" {
-  default = "Terra_SecurityGroup"
-}
-
-variable "ami_id" {
-  default = "ami-02d26659fd82cf299"
-}
-
-variable "instance_type" {
-  default = "t3.micro"
-}
-
-variable "key_name" {
-  default = "KeyTerra"
-}
-
-variable "instance_name" {
-  default = "Terraform_ins"
+output "s3_bucket_name" {
+  value = aws_s3_bucket.terraformgb_bucket.bucket
 }
