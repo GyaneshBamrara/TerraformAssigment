@@ -2,52 +2,22 @@ provider "aws" {
   region = "ap-south-1"
 }
 
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "main-vpc"
-  }
+data "aws_subnet" "Terra_subnet" {
+  id = "subnet-05f3e4ebf28c3f1de"
 }
 
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.main.id
-  tags = {
-    Name = "main-igw"
-  }
+data "aws_vpc" "TerraF_vpc" {
+  id = "vpc-07557001c6a5eb1b9"
 }
 
-resource "aws_subnet" "Terra_subnet" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
-  map_public_ip_on_launch = true
-  availability_zone       = "ap-south-1a"
-  tags = {
-    Name = "Terra_subnet"
-  }
-}
-
-resource "aws_route_table" "public_rt" {
-  vpc_id = aws_vpc.main.id
-  tags = {
-    Name = "public-route-table"
-  }
-}
-
-resource "aws_route" "default_route" {
-  route_table_id         = aws_route_table.public_rt.id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.igw.id
-}
-
-resource "aws_route_table_association" "public_assoc" {
-  subnet_id      = aws_subnet.Terra_subnet.id
-  route_table_id = aws_route_table.public_rt.id
+data "aws_route_table" "public_rt" {
+  id = "rtb-084bc8bdcac97607f"
 }
 
 resource "aws_security_group" "web_sg" {
   name        = "web-sg"
   description = "Allow HTTP and SSH"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = data.aws_vpc.TerraF_vpc.id
 
   ingress {
     from_port   = 80
@@ -78,7 +48,7 @@ resource "aws_security_group" "web_sg" {
 resource "aws_instance" "Terraform_ins" {
   ami           = "ami-0f5ee92e2d63afc18" # Amazon Linux 2 AMI for ap-south-1
   instance_type = "t2.micro"
-  subnet_id     = aws_subnet.Terra_subnet.id
+  subnet_id     = data.aws_subnet.Terra_subnet.id
   security_groups = [aws_security_group.web_sg.name]
   tags = {
     Name = "Terraform_ins"
@@ -100,7 +70,10 @@ resource "aws_s3_bucket_versioning" "versioning" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
- _side_encryption_by_default {
+  bucket = aws_s3_bucket.my_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
     }
   }
