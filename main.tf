@@ -87,40 +87,16 @@ resource "aws_security_group" "terra_sg" {
 
 resource "aws_instance" "terraform_ins" {
   ami                         = var.ami_id
-  instance_type               = var.instance_type
-  subnet_id                   = aws_subnet.terra_subnet.id
-  vpc_security_group_ids      = [aws_security_group.terra_sg.id]
+_group.terra_sg.id]
   associate_public_ip_address = true
   key_name                    = var.key_name
 
   tags = {
-    Name = var.instance_name
-  }
-}
-
-# Variables
-variable "aws_region" {
-  default = "ap-south-1"
-}
-
-variable "bucket_prefix" {
-  default = "terraformgb-s3-bucket"
-}
-
-variable "environment" {
-  default = "Dev"
-}
-
-variable "vpc_cidr" {
-  default = "10.0.0.0/24"
-}
-
-variable "vpc_name" {
-  default = "TerraF_vpc"
+   TerraF_vpc"
 }
 
 variable "subnet_cidr" {
-  default = "10.0.0.0/"
+  default = "10.0.0.0/28"
 }
 
 variable "availability_zone" {
