@@ -88,8 +88,7 @@ resource "aws_security_group" "terra_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = var.sg_name
+ _name
   }
 }
 
@@ -103,7 +102,7 @@ resource "aws_instance" "terraform_ins" {
   key_name                    = var.key_name
 
   tags = {
-    var.instance_name
+    Name = var.instance_name
   }
 }
 
@@ -113,7 +112,7 @@ variable "aws_region" {
 }
 
 variable "bucket_prefix" {
-  default = "terraformgb-s3-bucket"
+ -s3-bucket"
 }
 
 variable "environment" {
