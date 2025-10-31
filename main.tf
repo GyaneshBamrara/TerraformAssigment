@@ -66,7 +66,6 @@ resource "aws_security_group" "terra_sg" {
   name        = var.sg_name
   description = "Allow SSH and HTTP"
   vpc_id      = aws_vpc.terra_vpc.id
-
   ingress {
     from_port   = 22
     to_port     = 22
@@ -88,7 +87,8 @@ resource "aws_security_group" "terra_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
- _name
+  tags = {
+    Name = var.sg_name
   }
 }
 
@@ -112,11 +112,7 @@ variable "aws_region" {
 }
 
 variable "bucket_prefix" {
- -s3-bucket"
-}
-
-variable "environment" {
-  default = "Dev"
+  default = "terraformgb-s3-bucket"
 }
 
 variable "vpc_cidr" {
