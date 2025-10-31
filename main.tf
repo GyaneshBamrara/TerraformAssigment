@@ -76,9 +76,9 @@ resource "aws_security_group" "web_sg" {
 }
 
 resource "aws_instance" "Terraform_ins" {
-  ami           = "ami-0f5ee92e2d63afc18" # Amazon Linux 2 AMI (ap-south-1)
+  ami           = "ami-0f5ee92e2d63afc18" # Amazon Linux 2 AMI for ap-south-1
   instance_type = "t2.micro"
-  subnet_id     = aws.id
+  subnet_id     = aws_subnet.Terra_subnet.id
   security_groups = [aws_security_group.web_sg.name]
   tags = {
     Name = "Terraform_ins"
@@ -100,10 +100,7 @@ resource "aws_s3_bucket_versioning" "versioning" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
-  bucket = aws_s3_bucket.my_bucket.id
-
-  rule {
-   _side_encryption_by_default {
+ _side_encryption_by_default {
       sse_algorithm = "AES256"
     }
   }
