@@ -2,12 +2,10 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Generate a random suffix for unique bucket name
 resource "random_id" "rand" {
   byte_length = 4
 }
 
-# S3 Bucket
 resource "aws_s3_bucket" "terraformgb_bucket" {
   bucket = "${var.bucket_prefix}-${random_id.rand.hex}"
   tags = {
@@ -16,7 +14,6 @@ resource "aws_s3_bucket" "terraformgb_bucket" {
   }
 }
 
-# VPC
 resource "aws_vpc" "terra_vpc" {
   cidr_block = var.vpc_cidr
   tags = {
@@ -24,7 +21,6 @@ resource "aws_vpc" "terra_vpc" {
   }
 }
 
-# Subnet
 resource "aws_subnet" "terra_subnet" {
   vpc_id                  = aws_vpc.terra_vpc.id
   cidr_block              = var.subnet_cidr
@@ -35,7 +31,6 @@ resource "aws_subnet" "terra_subnet" {
   }
 }
 
-# Internet Gateway
 resource "aws_internet_gateway" "terra_igw" {
   vpc_id = aws_vpc.terra_vpc.id
   tags = {
@@ -43,7 +38,6 @@ resource "aws_internet_gateway" "terra_igw" {
   }
 }
 
-# Route Table
 resource "aws_route_table" "terra_rt" {
   vpc_id = aws_vpc.terra_vpc.id
   route {
@@ -55,17 +49,16 @@ resource "aws_route_table" "terra_rt" {
   }
 }
 
-# Route Table Association
 resource "aws_route_table_association" "terra_rta" {
   subnet_id      = aws_subnet.terra_subnet.id
   route_table_id = aws_route_table.terra_rt.id
 }
 
-# Security Group
 resource "aws_security_group" "terra_sg" {
   name        = var.sg_name
   description = "Allow SSH and HTTP"
   vpc_id      = aws_vpc.terra_vpc.id
+
   ingress {
     from_port   = 22
     to_port     = 22
@@ -92,7 +85,6 @@ resource "aws_security_group" "terra_sg" {
   }
 }
 
-# EC2 Instance
 resource "aws_instance" "terraform_ins" {
   ami                         = var.ami_id
   instance_type               = var.instance_type
@@ -115,6 +107,10 @@ variable "bucket_prefix" {
   default = "terraformgb-s3-bucket"
 }
 
+variable "environment" {
+  default = "Dev"
+}
+
 variable "vpc_cidr" {
   default = "10.0.0.0/24"
 }
@@ -124,7 +120,7 @@ variable "vpc_name" {
 }
 
 variable "subnet_cidr" {
-  default = "10.0.0.0/28"
+  default = "10.0.0.0/"
 }
 
 variable "availability_zone" {
