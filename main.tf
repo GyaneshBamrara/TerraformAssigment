@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "ap-south-1"
+  region = var.aws_region
 }
 
 # Generate a random suffix for unique bucket name
@@ -7,43 +7,43 @@ resource "random_id" "rand" {
   byte_length = 4
 }
 
-# Create an S3 Bucket with a unique name
+# S3 Bucket
 resource "aws_s3_bucket" "terraformgb_bucket" {
-  bucket = "terraformgb-s3-bucket-${random_id.rand.hex}"
+  bucket = "${var.bucket_prefix}-${random_id.rand.hex}"
   tags = {
-    Name        = "terraformgb-s3-bucket"
-    Environment = "Dev"
+    Name        = var.bucket_prefix
+    Environment = var.environment
   }
 }
 
-# Create a VPC
+# VPC
 resource "aws_vpc" "terra_vpc" {
-  cidr_block = "10.0.0.0/24"
+  cidr_block = var.vpc_cidr
   tags = {
-    Name = "TerraF_vpc"
+    Name = var.vpc_name
   }
 }
 
-# Create a public subnet inside that VPC
+# Subnet
 resource "aws_subnet" "terra_subnet" {
   vpc_id                  = aws_vpc.terra_vpc.id
-  cidr_block              = "10.0.0.0/28"
-  availability_zone       = "ap-south-1b"
+  cidr_block              = var.subnet_cidr
+  availability_zone       = var.availability_zone
   map_public_ip_on_launch = true
   tags = {
-    Name = "Terra_subnet"
+    Name = var.subnet_name
   }
 }
 
-# Create an Internet Gateway
+# Internet Gateway
 resource "aws_internet_gateway" "terra_igw" {
   vpc_id = aws_vpc.terra_vpc.id
   tags = {
-    Name = "Terra_IGW"
+    Name = var.igw_name
   }
 }
 
-# Create a route table and attach to subnet
+# Route Table
 resource "aws_route_table" "terra_rt" {
   vpc_id = aws_vpc.terra_vpc.id
   route {
@@ -51,18 +51,19 @@ resource "aws_route_table" "terra_rt" {
     gateway_id = aws_internet_gateway.terra_igw.id
   }
   tags = {
-    Name = "Terra_RouteTable"
+    Name = var.route_table_name
   }
 }
 
+# Route Table Association
 resource "aws_route_table_association" "terra_rta" {
   subnet_id      = aws_subnet.terra_subnet.id
   route_table_id = aws_route_table.terra_rt.id
 }
 
-# Create a security group
+# Security Group
 resource "aws_security_group" "terra_sg" {
-  name        = "terra-sg"
+  name        = var.sg_name
   description = "Allow SSH and HTTP"
   vpc_id      = aws_vpc.terra_vpc.id
 
@@ -88,20 +89,81 @@ resource "aws_security_group" "terra_sg" {
   }
 
   tags = {
-    Name = "Terra_SecurityGroup"
+    Name = var.sg_name
   }
 }
 
-# Create EC2 Instance
+# EC2 Instance
 resource "aws_instance" "terraform_ins" {
-  ami                         = "ami-02d26659fd82cf299" # Ubuntu 24.04 LTS
-  instance_type               = "t3.micro"
+  ami                         = var.ami_id
+  instance_type               = var.instance_type
   subnet_id                   = aws_subnet.terra_subnet.id
   vpc_security_group_ids      = [aws_security_group.terra_sg.id]
   associate_public_ip_address = true
-  key_name = "KeyTerra"
+  key_name                    = var.key_name
 
   tags = {
-    Name = "Terraform_ins"
+    var.instance_name
   }
+}
+
+# Variables
+variable "aws_region" {
+  default = "ap-south-1"
+}
+
+variable "bucket_prefix" {
+  default = "terraformgb-s3-bucket"
+}
+
+variable "environment" {
+  default = "Dev"
+}
+
+variable "vpc_cidr" {
+  default = "10.0.0.0/24"
+}
+
+variable "vpc_name" {
+  default = "TerraF_vpc"
+}
+
+variable "subnet_cidr" {
+  default = "10.0.0.0/28"
+}
+
+variable "availability_zone" {
+  default = "ap-south-1b"
+}
+
+variable "subnet_name" {
+  default = "Terra_subnet"
+}
+
+variable "igw_name" {
+  default = "Terra_IGW"
+}
+
+variable "route_table_name" {
+  default = "Terra_RouteTable"
+}
+
+variable "sg_name" {
+  default = "Terra_SecurityGroup"
+}
+
+variable "ami_id" {
+  default = "ami-02d26659fd82cf299"
+}
+
+variable "instance_type" {
+  default = "t3.micro"
+}
+
+variable "key_name" {
+  default = "KeyTerra"
+}
+
+variable "instance_name" {
+  default = "Terraform_ins"
 }
