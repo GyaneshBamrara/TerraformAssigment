@@ -9,7 +9,7 @@ resource "random_id" "rand" {
 
 # Create an S3 Bucket
 resource "aws_s3_bucket" "terraformgb_bucket" {
-  bucket = "terraformgb-s3-bucket"
+  bucket = "terraformgb-s3-bucket-${random_id.rand.hex}"
   tags = {
     Name        = "terraformgb-s3-bucket"
     Environment = "Dev"
