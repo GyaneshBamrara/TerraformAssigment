@@ -2,6 +2,7 @@ provider "aws" {
   region = var.aws_region
 }
 
+# VARIABLES
 variable "aws_region" {
   description = "AWS region to deploy resources in"
   default     = "ap-south-1"
@@ -47,10 +48,17 @@ variable "key_name" {
   default     = "KeyTerra"
 }
 
+variable "instance_name" {
+  description = "Name tag for EC2 instance"
+  default     = "Terraform_ins"
+}
+
+# RANDOM ID FOR BUCKET
 resource "random_id" "rand" {
   byte_length = 4
 }
 
+# S3 BUCKET
 resource "aws_s3_bucket" "terraformgb_bucket" {
   bucket = "${var.bucket_prefix}-${random_id.rand.hex}"
   tags = {
@@ -59,6 +67,7 @@ resource "aws_s3_bucket" "terraformgb_bucket" {
   }
 }
 
+# VPC
 resource "aws_vpc" "terra_vpc" {
   cidr_block = var.vpc_cidr
   tags = {
@@ -66,6 +75,7 @@ resource "aws_vpc" "terra_vpc" {
   }
 }
 
+# SUBNET
 resource "aws_subnet" "terra_subnet" {
   vpc_id                  = aws_vpc.terra_vpc.id
   cidr_block              = var.subnet_cidr
@@ -76,6 +86,7 @@ resource "aws_subnet" "terra_subnet" {
   }
 }
 
+# INTERNET GATEWAY
 resource "aws_internet_gateway" "terra_igw" {
   vpc_id = aws_vpc.terra_vpc.id
   tags = {
@@ -83,6 +94,7 @@ resource "aws_internet_gateway" "terra_igw" {
   }
 }
 
+# ROUTE TABLE
 resource "aws_route_table" "terra_rt" {
   vpc_id = aws_vpc.terra_vpc.id
   route {
@@ -94,11 +106,13 @@ resource "aws_route_table" "terra_rt" {
   }
 }
 
+# ROUTE TABLE ASSOCIATION
 resource "aws_route_table_association" "terra_rta" {
   subnet_id      = aws_subnet.terra_subnet.id
   route_table_id = aws_route_table.terra_rt.id
 }
 
+# SECURITY GROUP
 resource "aws_security_group" "terra_sg" {
   name        = "terra-sg"
   description = "Allow SSH and HTTP"
@@ -130,18 +144,21 @@ resource "aws_security_group" "terra_sg" {
   }
 }
 
+# EC2 INSTANCE
 resource "aws_instance" "terraform_ins" {
   ami                         = var.ami_id
-  instance_type subnet_id                   = aws_subnet.terra_subnet.id
+  instance_type               = var.instance_type
+  subnet_id                   = aws_subnet.terra_subnet.id
   vpc_security_group_ids      = [aws_security_group.terra_sg.id]
   associate_public_ip_address = true
   key_name                    = var.key_name
 
   tags = {
-    Name = "Terraform_ins"
+    Name = var.instance_name
   }
 }
 
+# OUTPUTS
 output "ec2_public_ip" {
   value = aws_instance.terraform_ins.public_ip
 }
