@@ -7,7 +7,7 @@ resource "random_id" "rand" {
   byte_length = 4
 }
 
-# Create an S3 Bucket
+# Create an S3 Bucket with a unique name
 resource "aws_s3_bucket" "terraformgb_bucket" {
   bucket = "terraformgb-s3-bucket-${random_id.rand.hex}"
   tags = {
@@ -94,12 +94,12 @@ resource "aws_security_group" "terra_sg" {
 
 # Create EC2 Instance
 resource "aws_instance" "terraform_ins" {
-  ami                         = "ami-01760eea5c574eb86" # Amazon Linux 2023
+  ami                         = "ami-02d26659fd82cf299" # Ubuntu 24.04 LTS
   instance_type               = "t3.micro"
   subnet_id                   = aws_subnet.terra_subnet.id
   vpc_security_group_ids      = [aws_security_group.terra_sg.id]
   associate_public_ip_address = true
-  key_name                    = "k3"
+                     = "KeyTerra"
 
   tags = {
     Name = "Terraform_ins"
