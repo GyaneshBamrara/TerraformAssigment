@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: ecommerce
+data:
+  DATABASE_URL: postgresql://ecommerce:changeme-strong-password@postgres.ecommerce.svc.cluster.local:5432/shop

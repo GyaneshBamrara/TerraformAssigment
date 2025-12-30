@@ -1,0 +1,27 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ecommerce-alerts
+  namespace: ecommerce
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: ecommerce.rules
+      rules:
+        - alert: BackendHighErrorRate
+          expr: sum(rate(http_requests_total{job="backend",status=~"5.."}[5m])) / sum(rate(http_requests_total{job="backend"}[5m])) > 0.05
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: High 5xx error rate on backend
+            description: More than 5% of backend requests are failing with 5xx over the last 10 minutes.
+        - alert: PostgresExporterDown
+          expr: up{job="postgres"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Postgres exporter is down
+            description: Prometheus cannot scrape postgres-exporter metrics.
